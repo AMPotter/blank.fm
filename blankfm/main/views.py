@@ -2,12 +2,13 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.http import HttpResponse
 from .models import ArticlePost, ArtistProfile, FanProfile, ContributerProfile
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import ArtistProfileForm, FanProfileForm, ArticlePostForm, UserForm, ContributerProfileForm
+
 
 class ArticleList(LoginRequiredMixin, ListView):
     context_object_name = "article_list"
@@ -129,37 +130,23 @@ def add_article(request):
     return render(request, 'main/add_article.html', {'addarticle':addarticle})
 
 @login_required
-def fan_profile(request, username):
+def profile(request, username):
     user = get_object_or_404(User, username=username)
-    profile = get_object_or_404(FanProfile, user=user)
-    return render(request, 'main/fan_detail.html', {'fanprofile':profile})
-
-@login_required
-def artist_profile(request, username):
-    user = get_object_or_404(User, username=username)
-    profile = get_object_or_404(ArtistProfile, user=user)
-    return render(request, 'main/artist_detail.html', {'artistprofile':profile})
-
-@login_required
-def contrib_profile(request, username):
-    user = get_object_or_404(User, username=username)
-    profile = get_object_or_404(ContributerProfile, user=user)
-    return render(request, 'main/contributer_detail.html', {'contributerprofile':profile})
-
-#@login_required
-#def fan_profile_redirect(request):
-
-@login_required
-def profile(request):
-    user = get_object_or_404(User, pk=request.user.pk)
     if user.groups.filter(name='Fans').exists():
-        return redirect('main:fanprofile', username=request.user.username)
+        profile = get_object_or_404(FanProfile, user=user)
+        return render(request, 'main/fan_detail.html', {'fanprofile':profile})
     elif user.groups.filter(name='Artists').exists():
-        return redirect('main:artistprofile', username=request.user.username)
+        profile = get_object_or_404(ArtistProfile, user=user)
+        return render(request, 'main/artist_detail.html', {'artistprofile':profile})
     elif user.groups.filter(name='Contributers').exists():
-        return redirect('main:contributerprofile'), username=request.user.username)
+        profile = get_object_or_404(ContributerProfile, user=user)
+        return render(request, 'main/contributer_detail.html', {'contributerprofile':profile})
     else:
         return redirect('main:login')
+
+@login_required
+def profile_redirect(request):
+    return redirect('main:profile', username=request.user.username)
 
 
 

@@ -14,6 +14,12 @@ class ArticlePost(models.Model):
     def __str__(self):
         return self.title
 
+class ArtistPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=50)
+    picture = models.ImageField(upload_to='thumbpath', blank=True)
+    body = models.TextField()
+    timestamp = models.DateTimeField(default=timezone.now)
 
 class ArtistProfile(models.Model):
     user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE)
