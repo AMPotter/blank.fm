@@ -21,6 +21,9 @@ class ArtistPost(models.Model):
     body = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
 
+    def __str__(self):
+        return self.title
+
 class ArtistProfile(models.Model):
     user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='thumbpath', blank=True)

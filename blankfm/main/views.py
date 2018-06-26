@@ -4,10 +4,16 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.http import HttpResponse
-from .models import ArticlePost, ArtistProfile, FanProfile, ContributerProfile
+from .models import ArticlePost, ArtistProfile, FanProfile, ContributerProfile, ArtistPost
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import ArtistProfileForm, FanProfileForm, ArticlePostForm, UserForm, ContributerProfileForm
+from .forms import ArtistProfileForm, FanProfileForm, ArticlePostForm, UserForm, ContributerProfileForm, ArtistPostForm
+
+def isContributer(user):
+    return user.groups.filter(name='Contributers').exists()
+
+def isArtist(user):
+    return user.groups.filter(name='Artists').exists()
 
 
 class ArticleList(LoginRequiredMixin, ListView):
@@ -21,23 +27,6 @@ class ArticleList(LoginRequiredMixin, ListView):
 class ArticleDetail(DetailView):
     model = ArticlePost
     template_name = 'main/detail.html'
-
-class ArtistProfileDetail(DetailView):
-    model = ArtistProfile
-    template_name = 'main/artist_detail.html'
-
-    def get_object(self):
-        post = super().get_object()
-        artistposts = ArticlePost.objects.filter(user=user)
-        post.artistposts = artistposts
-        return post
-
-class FanProfileDetail(LoginRequiredMixin, DetailView):
-    model = FanProfile
-    template_name = 'main/fan_detail'
-    login_url = 'login/'
-
-
 
 
 def fan_signup(request):
@@ -93,34 +82,14 @@ def artist_signup(request):
         artist_profile_form = ArtistProfileForm()
     return render(request, 'registration/artistsignup.html', {'artist_user_form':artist_user_form, 'artist_profile_form':artist_profile_form})
 
-#def contributer_signup(request):
-#    if request.method == 'POST':
-#        contrib_user_form = UserForm(request.POST)
-#        contrib_profile_form = ContributerProfileForm(request.POST)
-#        if contrib_user_form.is_valid() and contrib_profile_form.is_valid():
-#            contrib_user_form.save()
-#            username = contrib_user_form.cleaned_data.get('username')
-#            raw_password = artist_user_form.cleaned_data.get('password1')
-#            user = authenticate(username=username, password=raw_password)
-#            login(request, user)
-#            group = Group.objects.get(name='Contributers')
-#            user.groups.add(group)
-#            user.save()
-#            location = contrib_profile_form.cleaned_data['location']
-#            age = contrib_profile_form.cleaned_data['age']
-#            bio = contrib_profile_form.cleaned_data['bio']
-#            user = get_object_or_404(User, pk=request.user.pk)
-#            profile = ContributerProfile(location=location, age=age, bio=bio, user=user)
-
-
 @login_required
-@permission_required('ArticlePost.can_add', 'main:login')
+@user_passes_test(isContributer, 'main:login')
 def add_article(request):
     if request.method == 'POST':
         addarticle = ArticlePostForm(request.POST)
-        if form.is_valid():
-            title = form.cleaned_data['title']
-            body = form.cleaned_data['body']
+        if addarticle.is_valid():
+            title = addarticle.cleaned_data['title']
+            body = addarticle.cleaned_data['body']
             user = get_object_or_404(User, pk=request.user.pk)
             post = ArticlePost(title=title, body=body, user=user)
             post.save()
@@ -130,14 +99,31 @@ def add_article(request):
     return render(request, 'main/add_article.html', {'addarticle':addarticle})
 
 @login_required
+@user_passes_test(isArtist, 'main:login')
+def artist_post(request):
+    if request.method == 'POST':
+        artistpost = ArtistPostForm(request.POST)
+        if artistpost.is_valid():
+            title = artistpost.cleaned_data['title']
+            body = artistpost.cleaned_data['body']
+            user = get_object_or_404(User, pk=request.user.pk)
+            post = ArtistPost(title=title, body=body, user=user)
+            post.save()
+            return redirect('main:profile_redirect')
+    else:
+        artistpost = ArtistPostForm()
+    return render(request, 'main/artist_post.html', {'artistpost':artistpost})
+
+@login_required
 def profile(request, username):
     user = get_object_or_404(User, username=username)
     if user.groups.filter(name='Fans').exists():
         profile = get_object_or_404(FanProfile, user=user)
-        return render(request, 'main/fan_detail.html', {'fanprofile':profile})
+        return render(request, 'main/fan_profile.html', {'fanprofile':profile})
     elif user.groups.filter(name='Artists').exists():
         profile = get_object_or_404(ArtistProfile, user=user)
-        return render(request, 'main/artist_detail.html', {'artistprofile':profile})
+        artistposts = ArtistPost.objects.filter(user=user)
+        return render(request, 'main/artist_profile.html', {'artistprofile':profile, 'artistposts':artistposts})
     elif user.groups.filter(name='Contributers').exists():
         profile = get_object_or_404(ContributerProfile, user=user)
         return render(request, 'main/contributer_detail.html', {'contributerprofile':profile})
@@ -147,6 +133,11 @@ def profile(request, username):
 @login_required
 def profile_redirect(request):
     return redirect('main:profile', username=request.user.username)
+
+#@login_required
+#def artist_post(request):
+#    if request.method == 'POST':
+#        addpost =
 
 
 
