@@ -26,7 +26,11 @@ class ArticleList(LoginRequiredMixin, ListView):
 
 class ArticleDetail(DetailView):
     model = ArticlePost
-    template_name = 'main/detail.html'
+    template_name = 'main/article_detail.html'
+
+class ArtistPostDetail(DetailView):
+    model = ArtistPost
+    template_name = 'main/artist_detail.html'
 
 
 def fan_signup(request):
