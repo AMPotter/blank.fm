@@ -15,6 +15,9 @@ def isContributer(user):
 def isArtist(user):
     return user.groups.filter(name='Artists').exists()
 
+def can_post(user):
+    return isContributer(user) or isArtist(user)
+
 
 class ArticleList(LoginRequiredMixin, ListView):
     context_object_name = "article_list"
@@ -130,7 +133,8 @@ def profile(request, username):
         return render(request, 'main/artist_profile.html', {'artistprofile':profile, 'artistposts':artistposts})
     elif user.groups.filter(name='Contributers').exists():
         profile = get_object_or_404(ContributerProfile, user=user)
-        return render(request, 'main/contributer_detail.html', {'contributerprofile':profile})
+        articleposts = ArticlePost.objects.filter(user=user)
+        return render(request, 'main/contributer_profile.html', {'contributerprofile':profile, 'articleposts':articleposts})
     else:
         return redirect('main:login')
 
@@ -138,10 +142,15 @@ def profile(request, username):
 def profile_redirect(request):
     return redirect('main:profile', username=request.user.username)
 
-#@login_required
-#def artist_post(request):
-#    if request.method == 'POST':
-#        addpost =
+@login_required
+@user_passes_test(can_post, 'main:login')
+def post(request):
+    user = get_object_or_404(User, pk=request.user.pk)
+    if user.groups.filter(name='Artists').exists():
+        return redirect('main:artistpost')
+    if user.groups.filter(name='Contributers').exists():
+        return redirect('main:addarticle')
+
 
 
 

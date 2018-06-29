@@ -44,7 +44,7 @@ class FanProfile(models.Model):
 
 
 def __str__(self):
-        return self.user
+        return self.user.username
 
 class ContributerProfile(models.Model):
     user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE)
@@ -54,7 +54,7 @@ class ContributerProfile(models.Model):
     bio = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return self.user
+        return self.user.username
 
 
 
