@@ -19,6 +19,8 @@ def can_post(user):
     return isContributer(user) or isArtist(user)
 
 
+
+
 class ArticleList(LoginRequiredMixin, ListView):
     context_object_name = "article_list"
     queryset = ArticlePost.objects.all().order_by('-timestamp')
@@ -150,6 +152,8 @@ def post(request):
         return redirect('main:artistpost')
     if user.groups.filter(name='Contributers').exists():
         return redirect('main:addarticle')
+
+
 
 
 

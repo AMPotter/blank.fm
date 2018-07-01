@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 class ArticlePost(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     title = models.CharField(max_length=50)
-    picture = models.ImageField(upload_to='thumbpath', blank=True)
+    picture = models.ImageField(upload_to='POST_IMAGE/', blank=True)
     body = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
 
@@ -17,7 +17,7 @@ class ArticlePost(models.Model):
 class ArtistPost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
-    picture = models.ImageField(upload_to='thumbpath', blank=True)
+    picture = models.ImageField(upload_to='POST_IMAGE/', blank=True)
     body = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
 
@@ -26,7 +26,7 @@ class ArtistPost(models.Model):
 
 class ArtistProfile(models.Model):
     user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to='thumbpath', blank=True)
+    profile_picture = models.ImageField(upload_to='POST_IMAGE/', blank=True)
     location = models.CharField(max_length=150)
     genre = models.CharField(max_length=100)
     age = models.CharField(max_length=2)
@@ -37,7 +37,7 @@ def __str__(self):
 
 class FanProfile(models.Model):
     user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to='thumbpath', blank=True)
+    profile_picture = models.ImageField(upload_to='POST_IMAGE', blank=True)
     location = models.CharField(max_length=150)
     age = models.CharField(max_length=2)
     bio = models.TextField(null=True, blank=True)
