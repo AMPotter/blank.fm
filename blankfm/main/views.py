@@ -18,16 +18,14 @@ def isArtist(user):
 def can_post(user):
     return isContributer(user) or isArtist(user)
 
-
-
+def can_delete(user):
+    return isContributer(user) or isArtist(user)
 
 class ArticleList(LoginRequiredMixin, ListView):
     context_object_name = "article_list"
     queryset = ArticlePost.objects.all().order_by('-timestamp')
     template_name = 'main/home.html'
     login_url = 'login/'
-
-
 
 class ArticleDetail(DetailView):
     model = ArticlePost
@@ -36,6 +34,7 @@ class ArticleDetail(DetailView):
 class ArtistPostDetail(DetailView):
     model = ArtistPost
     template_name = 'main/artist_detail.html'
+
 
 
 def fan_signup(request):
@@ -67,7 +66,7 @@ def fan_signup(request):
 def artist_signup(request):
     if request.method == 'POST':
         artist_user_form = UserForm(request.POST)
-        artist_profile_form = ArtistProfileForm(request.POST)
+        artist_profile_form = ArtistProfileForm(request.POST, request.FILES or None)
         if artist_user_form.is_valid() and artist_profile_form.is_valid():
             artist_user_form.save()
             username = artist_user_form.cleaned_data.get('username')
@@ -81,8 +80,10 @@ def artist_signup(request):
             age = artist_profile_form.cleaned_data['age']
             genre = artist_profile_form.cleaned_data['genre']
             bio = artist_profile_form.cleaned_data['bio']
+            profile_picture = request.FILES['profile_picture']
+            print(request.FILES)
             user = get_object_or_404(User, pk=request.user.pk)
-            profile = ArtistProfile(location=location, age=age, genre=genre, bio=bio, user=user)
+            profile = ArtistProfile(location=location, age=age, genre=genre, bio=bio, user=user, profile_picture=profile_picture)
             profile.save()
 
             return redirect('main:home')
@@ -95,12 +96,14 @@ def artist_signup(request):
 @user_passes_test(isContributer, 'main:login')
 def add_article(request):
     if request.method == 'POST':
-        addarticle = ArticlePostForm(request.POST)
+        addarticle = ArticlePostForm(request.POST, request.FILES or None)
         if addarticle.is_valid():
             title = addarticle.cleaned_data['title']
             body = addarticle.cleaned_data['body']
             user = get_object_or_404(User, pk=request.user.pk)
-            post = ArticlePost(title=title, body=body, user=user)
+            picture = request.FILES['picture']
+            print(request.FILES)
+            post = ArticlePost(title=title, body=body, user=user, picture=picture)
             post.save()
             return redirect('main:home')
     else:
@@ -111,12 +114,14 @@ def add_article(request):
 @user_passes_test(isArtist, 'main:login')
 def artist_post(request):
     if request.method == 'POST':
-        artistpost = ArtistPostForm(request.POST)
+        artistpost = ArtistPostForm(request.POST, request.FILES or None)
         if artistpost.is_valid():
             title = artistpost.cleaned_data['title']
             body = artistpost.cleaned_data['body']
             user = get_object_or_404(User, pk=request.user.pk)
-            post = ArtistPost(title=title, body=body, user=user)
+            picture = request.FILES['picture']
+            print(request.FILES)
+            post = ArtistPost(title=title, body=body, user=user, picture=picture)
             post.save()
             return redirect('main:profile_redirect')
     else:
@@ -152,6 +157,17 @@ def post(request):
         return redirect('main:artistpost')
     if user.groups.filter(name='Contributers').exists():
         return redirect('main:addarticle')
+
+def artist_list(request):
+    artists = []
+    for user in User.objects.filter(groups__name='Artists'):
+        try:
+            artists.append(ArtistProfile.objects.get(user=user))
+        except:
+            print(f'{user} failed test')
+            pass
+    # artists = [get_object_or_404(ArtistProfile, pk=user.pk) for user in User.objects.filter(groups__name='Artists')]
+    return render(request, 'main/artist_list.html', {'artistlist':artists})
 
 
 

@@ -48,7 +48,7 @@ def __str__(self):
 
 class ContributerProfile(models.Model):
     user = models.OneToOneField(User, unique=True, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to='thumbpath', blank=True)
+    profile_picture = models.ImageField(upload_to='POST_IMAGE', blank=True)
     location = models.CharField(max_length=150)
     age = models.CharField(max_length=2)
     bio = models.TextField(null=True, blank=True)
