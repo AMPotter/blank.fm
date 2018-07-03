@@ -40,8 +40,9 @@ class ArtistPostDetail(DetailView):
 def fan_signup(request):
     if request.method == 'POST':
         user_form = UserForm(request.POST)
-        profile_form = FanProfileForm(request.POST)
+        profile_form = FanProfileForm(request.POST, request.FILES or None)
         if user_form.is_valid() and profile_form.is_valid():
+            print('forms valid')
             user_form.save()
             username = user_form.cleaned_data.get('username')
             raw_password = user_form.cleaned_data.get('password1')
@@ -53,8 +54,10 @@ def fan_signup(request):
             location = profile_form.cleaned_data['location']
             age = profile_form.cleaned_data['age']
             bio = profile_form.cleaned_data['bio']
+            profile_picture = request.FILES['profile_picture']
+            print(request.FILES)
             user = get_object_or_404(User, pk=request.user.pk)
-            profile = FanProfile(location=location, age=age, bio=bio, user=user)
+            profile = FanProfile(location=location, age=age, bio=bio, user=user, profile_picture=profile_picture)
             profile.save()
 
             return redirect('main:home')
